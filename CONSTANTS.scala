@@ -21,7 +21,8 @@ object CONSTANTS {
     "achieve_mode" -> "Boolean",
     "flat_path" -> "String",
     "output_path" -> "String",
-    "output_pathD" -> "String")
+    "output_pathD" -> "String",
+    "channel_depth" -> "String")
 
 
   case class OptionMap(opt: String, value: String) {
@@ -126,42 +127,58 @@ object CONSTANTS {
   //function check value if it equals null or is empty
   def isEmpty(x:String) = x == "null" || x.isEmpty || x == null
 
-  def channel_creator(
-                        src                  : Option[String]=null,
-                        ga_sourcemedium      : Option[String]=null,
-                        utm_source           : Option[String]=null,
-                        utm_medium           : Option[String]=null,
-                        utm_campaign         : Option[String]=null,
-                        interaction_type     : Option[String]=null,
-                        profileID            : Option[String]=null,
-                        sessionID            : Option[String]=null,
-                        transactionID        : Option[String]=null): String = {
-
-    val channel = src match {
-      case Some("adriver") | Some("dcm") if interaction_type == Some("view")  => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).map(_.getOrElse("none")).mkString(" / ")
-      case Some("adriver") | Some("dcm") if interaction_type == Some("click") => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).map(_.getOrElse("none")).mkString(" / ")
-      case Some("seizmik")                       => "seizmik_channel" //ALLERT NEED TO EDIT IN FUTURE!!!
-      case Some("ga") | Some("bq")               => List(ga_sourcemedium,utm_campaign,sessionID,transactionID).map(_.getOrElse("none")).mkString(" / ")
-      case _                                     => throw new Exception("Unknown data source")
-    }
-    channel
-
-  }
+//  def channel_creator(
+//                       channel_depth        : Option[String]=null,
+//                       src                  : Option[String]=null,
+//                       ga_sourcemedium      : Option[String]=null,
+//                       utm_source           : Option[String]=null,
+//                       utm_medium           : Option[String]=null,
+//                       utm_campaign         : Option[String]=null,
+//                       interaction_type     : Option[String]=null,
+//                       profileID            : Option[String]=null,
+//                       sessionID            : Option[String]=null,
+//                       transactionID        : Option[String]=null): String = {
+//
+//    val channel = src match {
+//      case Some("adriver") | Some("dcm") if interaction_type == Some("view")  => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).map(_.getOrElse("none")).mkString(" / ")
+//      case Some("adriver") | Some("dcm") if interaction_type == Some("click") => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).map(_.getOrElse("none")).mkString(" / ")
+//      case Some("seizmik")                       => "seizmik_channel" //ALLERT NEED TO EDIT IN FUTURE!!!
+//      case Some("ga") | Some("bq")               => List(ga_sourcemedium,utm_campaign,sessionID,transactionID).map(_.getOrElse("none")).mkString(" / ")
+//      case _                                     => "Unknown data source "
+//    }
+//    channel
+//
+//  }
   val channel_creator1 = (
-    src                 : String,
-  ga_sourcemedium      : String,
-  utm_source           : String,
-  utm_medium           : String,
-  utm_campaign         : String,
-  interaction_type     : String,
-  profileID            : String,
-  sessionID            : String) => {
+                           channel_depth        : String,
+                           src                  : String,
+                           ga_sourcemedium      : String,
+                           utm_source           : String,
+                           utm_medium           : String,
+                           utm_campaign         : String,
+                           interaction_type     : String,
+                           profileID            : String,
+                           sessionID            : String) => {
+
+  val AdriverDCM = channel_depth match {
+    case "PROFILEID"     => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID)
+    case "SESSIONID"   => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID,sessionID)
+    case "TRANSACTIONID" => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID,sessionID)
+    case _                     => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID)
+  }
+
+  val GA_BQ = channel_depth match {
+    case "PROFILEID"     => List(ga_sourcemedium,utm_campaign)
+    case "SESSIONID"    => List(ga_sourcemedium,utm_campaign,sessionID)
+    case "TRANSACTIONID" => List(ga_sourcemedium,utm_campaign,sessionID)
+    case _                    => List(ga_sourcemedium,utm_campaign)
+  }
 
     val channel = src match {
-      case "adriver" | "dcm" if interaction_type == "view"  => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).mkString(" / ")
-      case "adriver" | "dcm" if interaction_type == "click" => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).mkString(" / ")
+      case "adriver" | "dcm" if interaction_type == "view"  => AdriverDCM.mkString(" / ")
+      case "adriver" | "dcm" if interaction_type == "click" => AdriverDCM.mkString(" / ")
       case "seizmik"                                        => "seizmik_channel" //ALLERT NEED TO EDIT IN FUTURE!!!
-      case "ga" | "bq"               => List(ga_sourcemedium,utm_campaign,sessionID).mkString(" / ")
+      case "ga" | "bq"               => GA_BQ.mkString(" / ")
       case _                                     => throw new Exception("Unknown data source")
     }
     channel
@@ -214,23 +231,5 @@ object CONSTANTS {
     val chains = target_paths.map(_.replace(contact_neg,""))
     chains
   }
-
-//  case class Touch(channel: String, hts: Long , conversion : String) {
-//    val getChannel = channel
-//    val getHTS     = hts
-//    val getConversion = conversion
-//  }
-//
-//  def recursion_chain[T](inputList: List[T])(p: T => Boolean): List[List[T]] = inputList match {
-//    case List() => List()
-//    case lvalid @(x :: xs) =>
-//      val (prev,next ) = lvalid.span(!p(_))
-//      (prev, next) match {
-//        case  alpha @ (List(List(_,_,"no_conv"),_*),List(List(_,_,"conv"),_*)) => alpha._1 ++ alpha._2.take(1) :: recursion_chain(alpha._2.drop(1))(p)
-//        case beta @ (Nil,List(List(_,_,"conv"),_*))                             => List() ++ beta._2.take(1) :: recursion_chain(beta._2.drop(1))(p)
-//        case gamma @ (List(List(_,_,"no_conv"),_*),Nil)                         => recursion_chain(List())(p)
-//        case _                                                                   => recursion_chain(List())(p)
-//      }
-//  }
 
 }

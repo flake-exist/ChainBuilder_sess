@@ -32,6 +32,7 @@ object LegoChainBuilder {
       case false => throw new Exception("problem with DATES !!!!!")
     }
 
+
     val data = spark.read.
       format("parquet").
       option("inferSchema","false").
@@ -66,7 +67,10 @@ object LegoChainBuilder {
       case _ => data_custom_0
     }
 
-    val data_preprocess_0 = data_custom_1.withColumn("channel",channel_creator_udf($"src",
+
+    val data_preprocess_0 = data_custom_1.withColumn("channel",channel_creator_udf(
+      lit(validMap("channel_depth").head.toString),
+      $"src",
       $"ga_sourcemedium",
       $"utm_source",
       $"utm_medium",
@@ -79,6 +83,8 @@ object LegoChainBuilder {
       $"goal",
       $"channel"
     )
+
+
 
     val data_preprocess_1 = data_preprocess_0.withColumn("conversion",
       when($"goal".isin(validMap("target_numbers"):_*),CONVERSION_SYMBOL).otherwise(NO_CONVERSION_SYMBOL)).
