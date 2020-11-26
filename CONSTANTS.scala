@@ -9,6 +9,9 @@ object CONSTANTS {
   val GLUE_SYMBOL_POS      : String = GLUE_SYMBOL + CONVERSION_SYMBOL //symbol denotes the contact with channel ended up with conversion
   val GLUE_SYMBOL_NEG      : String = GLUE_SYMBOL + NO_CONVERSION_SYMBOL //symbol denotes the contact with channel ended up without conversion
   val TRANSIT              : String = "=>"
+  val PROFILEID            : String = "PROFILEID"
+  val SESSIONID            : String = "SESSIONID"
+  val TRANSACTIONID        : String = "TRANSACTIONID"
 
   val necessary_args = Map(
     "projectID" -> "Long",
@@ -127,28 +130,7 @@ object CONSTANTS {
   //function check value if it equals null or is empty
   def isEmpty(x:String) = x == "null" || x.isEmpty || x == null
 
-//  def channel_creator(
-//                       channel_depth        : Option[String]=null,
-//                       src                  : Option[String]=null,
-//                       ga_sourcemedium      : Option[String]=null,
-//                       utm_source           : Option[String]=null,
-//                       utm_medium           : Option[String]=null,
-//                       utm_campaign         : Option[String]=null,
-//                       interaction_type     : Option[String]=null,
-//                       profileID            : Option[String]=null,
-//                       sessionID            : Option[String]=null,
-//                       transactionID        : Option[String]=null): String = {
-//
-//    val channel = src match {
-//      case Some("adriver") | Some("dcm") if interaction_type == Some("view")  => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).map(_.getOrElse("none")).mkString(" / ")
-//      case Some("adriver") | Some("dcm") if interaction_type == Some("click") => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID).map(_.getOrElse("none")).mkString(" / ")
-//      case Some("seizmik")                       => "seizmik_channel" //ALLERT NEED TO EDIT IN FUTURE!!!
-//      case Some("ga") | Some("bq")               => List(ga_sourcemedium,utm_campaign,sessionID,transactionID).map(_.getOrElse("none")).mkString(" / ")
-//      case _                                     => "Unknown data source "
-//    }
-//    channel
-//
-//  }
+
   val channel_creator1 = (
                            channel_depth        : String,
                            src                  : String,
@@ -161,16 +143,16 @@ object CONSTANTS {
                            sessionID            : String) => {
 
   val AdriverDCM = channel_depth match {
-    case "PROFILEID"     => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID)
-    case "SESSIONID"   => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID,sessionID)
-    case "TRANSACTIONID" => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID,sessionID)
+    case PROFILEID     => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID)
+    case SESSIONID   => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID,sessionID)
+    case TRANSACTIONID => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID,sessionID)
     case _                     => List(interaction_type,utm_source,utm_medium,utm_campaign,profileID)
   }
 
   val GA_BQ = channel_depth match {
-    case "PROFILEID"     => List(ga_sourcemedium,utm_campaign)
-    case "SESSIONID"    => List(ga_sourcemedium,utm_campaign,sessionID)
-    case "TRANSACTIONID" => List(ga_sourcemedium,utm_campaign,sessionID)
+    case PROFILEID     => List(ga_sourcemedium,utm_campaign)
+    case SESSIONID    => List(ga_sourcemedium,utm_campaign,sessionID)
+    case TRANSACTIONID => List(ga_sourcemedium,utm_campaign,sessionID)
     case _                    => List(ga_sourcemedium,utm_campaign)
   }
 

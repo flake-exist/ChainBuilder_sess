@@ -32,6 +32,11 @@ object LegoChainBuilder {
       case false => throw new Exception("problem with DATES !!!!!")
     }
 
+    validMap("channel_depth").head.toString match {
+      case PROFILEID | SESSIONID | TRANSACTIONID => true
+      case _                                     => new Exception(s"`channel_depth does not have such value.Maybe you mean $PROFILEID,$SESSIONID or $TRANSACTIONID")
+    }
+
 
     val data = spark.read.
       format("parquet").
@@ -163,17 +168,25 @@ object LegoChainBuilder {
       mode("overwrite").
       save(validMap("output_pathD").head.toString)
 
-    //Aggregated report about `ClientID` paths
-    val data_agg = data_pathInfo.
-      groupBy("user_path").
-      agg(count($"ClientID").as("count")).
-      sort($"count".desc)
+    validMap("channel_depth").head.toString match {
+      case PROFILEID => {
 
-    data_agg.coalesce(1).
-      write.format("csv").
-      option("header","true").
-      mode("overwrite").
-      save(validMap("output_path").head.toString)
+
+        //Aggregated report about `ClientID` paths
+        val data_agg = data_pathInfo.
+          groupBy("user_path").
+          agg(count($"ClientID").as("count")).
+          sort($"count".desc)
+
+        data_agg.coalesce(1).
+          write.format("csv").
+          option("header", "true").
+          mode("overwrite").
+          save(validMap("output_path").head.toString)
+      }
+
+      case _ => println("Agg report created only with `channel_depth==PROFILEID`")
+    }
 
 
   }
